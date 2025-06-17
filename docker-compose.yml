@@ -5,12 +5,8 @@ services:
     build: .
     ports:
       - "8080:8080"
-    environment:
-      - APP_NAME=NCAToolkit
-      - APP_DEBUG=true
-      - APP_DOMAIN=localhost
-      - API_KEY=test_api_key_123
-      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
     volumes:
       - storage:/app/storage
       - logs:/app/logs
