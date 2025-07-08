@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, Response
 from app_utils import validate_payload, queue_task_wrapper
 from services.v1.video.youtube_transcript import fetch_youtube_transcript
 from services.authentication import authenticate
@@ -25,6 +25,12 @@ def youtube_transcript(job_id, data):
     format = data.get('format', 'json')
     response_type = data.get('response_type', 'direct')
     result = fetch_youtube_transcript(youtube_url, languages, format, response_type, job_id)
+    if isinstance(result, Response):
+        result_data = result.get_json()
+        if "error" in result_data:
+            return result, "/v1/video/youtube/transcript", 400
+        # If not an error, return the response as is
+        return result, "/v1/video/youtube/transcript", 200
     if "error" in result:
         return result, "/v1/video/youtube/transcript", 400
     return result, "/v1/video/youtube/transcript", 200 

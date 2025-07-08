@@ -16,7 +16,7 @@
 
 
 
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, Response
 from functools import wraps
 import jsonschema
 import os
@@ -56,9 +56,23 @@ def log_job_status(job_id, data):
     # Create or update the job log file
     job_file = os.path.join(jobs_dir, f"{job_id}.json")
     
-    # Write data directly to file
+    # Helper to make data serializable
+    def make_serializable(obj):
+        if isinstance(obj, Response):
+            try:
+                return obj.get_json()
+            except Exception:
+                return str(obj)
+        elif isinstance(obj, dict):
+            return {k: make_serializable(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [make_serializable(i) for i in obj]
+        else:
+            return obj
+
+    serializable_data = make_serializable(data)
     with open(job_file, 'w') as f:
-        json.dump(data, f, indent=2)
+        json.dump(serializable_data, f, indent=2)
 
 def queue_task_wrapper(bypass_queue=False):
     def decorator(f):
